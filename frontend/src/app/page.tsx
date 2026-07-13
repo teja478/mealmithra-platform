@@ -1,8 +1,30 @@
+import Navbar from "@/components/layout/Navbar";
+import Hero from "@/components/home/Hero";
+import WhyMealMithra from "@/components/home/WhyMealMithra";
+import Gallery from "@/components/home/Gallery";
+import TrustedBy from "@/components/home/TrustedBy";
+import SubscriptionPlans from "@/components/home/SubscriptionPlans";
+import HowItWorks from "@/components/home/HowItWorks";
+import BookingForm from "@/components/home/BookingForm";
+import Testimonials from "@/components/home/Testimonials";
+import FAQ from "@/components/home/FAQ";
+import Footer from "@/components/home/Footer";
+
 export default function Home() {
   return (
-  <main>
-    <h1>Welcome to MealMithra</h1>
-    <p>Dost jaisa care, Ghar jaisa khana.</p>
-  </main>
-);
+    <>
+      <Navbar />
+      <Hero />
+      <TrustedBy />
+      <WhyMealMithra />
+      <SubscriptionPlans />
+      <HowItWorks />
+      <Gallery />
+      <BookingForm />
+      <Testimonials />
+      <FAQ />
+      <Footer />
+      
+    </>
+  );
 }
