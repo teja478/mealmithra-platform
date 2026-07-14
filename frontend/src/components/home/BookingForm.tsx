@@ -1,8 +1,11 @@
 "use client";
 
 import { Calendar, Mail, MapPin, Phone, User } from "lucide-react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import InputField from "../forms/InputField";
+import SuccessModal from "../ui/SuccessModal";
+
 
 type BookingFormData = {
   fullName: string;
@@ -14,15 +17,42 @@ type BookingFormData = {
 };
 
 export default function BookingForm() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<BookingFormData>();
+  register,
+  handleSubmit,
+  reset,
+  formState: { errors },
+} = useForm<BookingFormData>();
 
-  const onSubmit = (data: BookingFormData) => {
-    console.log(data);
-  };
+const onSubmit = async (data: BookingFormData) => {
+  console.log("FORM DATA:", data);
+
+  setIsSubmitting(true);
+
+  console.log("Calling API...");
+  const response = await fetch("/api/bookings", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  const result = await response.json();
+
+  if (!result.success) {
+    setIsSubmitting(false);
+    alert(result.message);
+    return;
+  }
+
+  setIsSubmitting(false);
+  ///reset();
+  setShowSuccess(true);
+};
+
 
   return (
     <section
@@ -84,10 +114,20 @@ export default function BookingForm() {
               className="space-y-6"
             >
 
-              <InputField
+             <InputField
                 label="Full Name"
                 placeholder="Enter your name"
-                {...register("fullName", { required: "Required" })}
+                {...register("fullName", {
+                  required: "Please enter your full name.",
+                  minLength: {
+                    value: 3,
+                    message: "Name must be at least 3 characters.",
+                  },
+                  pattern: {
+                    value: /^[A-Za-z ]+$/,
+                    message: "Name can only contain letters.",
+                  },
+                })}
                 error={errors.fullName?.message}
               />
 
@@ -95,14 +135,26 @@ export default function BookingForm() {
                 label="Email Address"
                 type="email"
                 placeholder="Enter your email"
-                {...register("email", { required: "Required" })}
+                  {...register("email", {
+                  required: "Please enter your email.",
+                  pattern: {
+                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    message: "Please enter a valid email address.",
+                    },
+                  })}
                 error={errors.email?.message}
               />
 
               <InputField
                 label="Phone Number"
                 placeholder="9876543210"
-                {...register("phone", { required: "Required" })}
+                {...register("phone", {
+                required: "Please enter your phone number.",
+                pattern: {
+                  value: /^[6-9]\d{9}$/,
+                  message: "Enter a valid 10-digit phone number.",
+                  },
+                })}
                 error={errors.phone?.message}
               />
 
@@ -115,34 +167,74 @@ export default function BookingForm() {
               <InputField
                 label="Office Location"
                 placeholder="Madhapur, Gachibowli..."
-                {...register("location")}
+                {...register("location", {
+                  minLength: {
+                    value: 5,
+                    message: "Location must be at least 5 characters.",
+                  },
+                  required: "Please enter your office location.",
+                })}
+                error={errors.location?.message}
               />
 
               <InputField
                 label="Preferred Start Date"
                 type="date"
-                {...register("startDate")}
+                min={new Date().toISOString().split("T")[0]}
+                {...register("startDate", {
+                  required: "Please select a preferred start date.",
+                })}
+                error={errors.startDate?.message}
               />
 
               <button
-                type="submit"
-                className="
-                  w-full
-                  rounded-2xl
-                  bg-orange-500
-                  py-4
-                  text-lg
-                  font-semibold
-                  text-white
-                  transition-all
-                  duration-300
-                  hover:scale-[1.02]
-                  hover:bg-orange-600
-                  active:scale-95
-                "
-              >
-                Book My Subscription
-              </button>
+  type="submit"
+  disabled={isSubmitting}
+  className={`
+    w-full
+    rounded-2xl
+    py-4
+    text-lg
+    font-semibold
+    text-white
+    transition-all
+    duration-300
+    active:scale-95
+    ${
+      isSubmitting
+        ? "cursor-not-allowed bg-orange-300"
+        : "bg-orange-500 hover:scale-[1.02] hover:bg-orange-600"
+    }
+  `}
+>
+  {isSubmitting ? (
+    <span className="flex items-center justify-center gap-3">
+      <svg
+        className="h-5 w-5 animate-spin"
+        viewBox="0 0 24 24"
+        fill="none"
+      >
+        <circle
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="white"
+          strokeWidth="3"
+          strokeOpacity="0.25"
+        />
+        <path
+          d="M22 12a10 10 0 0 1-10 10"
+          stroke="white"
+          strokeWidth="3"
+        />
+      </svg>
+
+      Preparing...
+    </span>
+  ) : (
+    "Book My Subscription"
+  )}
+</button>
 
             </form>
 
@@ -151,6 +243,10 @@ export default function BookingForm() {
         </div>
 
       </div>
+      <SuccessModal
+  isOpen={showSuccess}
+  onClose={() => setShowSuccess(false)}
+/>
     </section>
   );
 }
